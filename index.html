@@ -1,1445 +1,357 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#1a0f05">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<title>Chess Master 3D</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
-<style>
-/* ═══════════════════════════════════════════════
-   RESET & ROOT
-═══════════════════════════════════════════════ */
-*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
-:root{
-  --wood-light:#c8a97a;
-  --wood-dark:#7a4a20;
-  --wood-bg:#3d1f08;
-  --sq-light:#e8d5a0;
-  --sq-dark:#8b5e2a;
-  --gold:#d4a843;
-  --gold2:#f5c842;
-  --gold-dark:#9a6f15;
-  --gold-glow:rgba(212,168,67,0.5);
-  --silver:#e8e8f0;
-  --silver2:#c0c8d8;
-  --ebony:#2a2a3a;
-  --ebony2:#1a1a28;
-  --text-gold:#f5c842;
-  --btn-h:44px;
-  --radius:12px;
-}
-html,body{height:100%;overflow:hidden;background:var(--wood-bg)}
-body{display:flex;flex-direction:column;height:100dvh;font-family:'Georgia',serif}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Premium Chess 3D</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&family=Cinzel:wght@700&display=swap');
 
-/* ═══════════════════════════════════════════════
-   WOOD TEXTURE (CSS Generated)
-═══════════════════════════════════════════════ */
-.wood-texture{
-  background-color:#5c2e0a;
-  background-image:
-    repeating-linear-gradient(
-      88deg,
-      transparent 0px,transparent 2px,
-      rgba(255,255,255,0.015) 2px,rgba(255,255,255,0.015) 3px
-    ),
-    repeating-linear-gradient(
-      92deg,
-      transparent 0px,transparent 8px,
-      rgba(0,0,0,0.08) 8px,rgba(0,0,0,0.08) 9px
-    ),
-    linear-gradient(180deg,#7a3d10 0%,#5a2d08 30%,#6e3812 60%,#4a2206 100%);
-}
-.dark-green-bg{
-  background-color:#0d2018;
-  background-image:
-    radial-gradient(ellipse at 20% 50%,rgba(20,60,30,0.8) 0%,transparent 60%),
-    radial-gradient(ellipse at 80% 20%,rgba(10,40,20,0.6) 0%,transparent 50%),
-    repeating-linear-gradient(45deg,transparent,transparent 35px,rgba(255,255,255,0.01) 35px,rgba(255,255,255,0.01) 36px),
-    linear-gradient(160deg,#0e2318 0%,#091a10 50%,#0d2015 100%);
-}
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
+        
+        body {
+            background: radial-gradient(circle at center, #113629 0%, #03140e 100%); /* Premium Dark Green */
+            color: white;
+            font-family: 'Montserrat', sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
 
-/* ═══════════════════════════════════════════════
-   SCREENS
-═══════════════════════════════════════════════ */
-.screen{display:none;flex-direction:column;height:100%;width:100%}
-.screen.active{display:flex}
+        /* --- SCREENS --- */
+        .screen { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; position: absolute; top: 0; left: 0; }
+        .active-screen { display: flex; }
 
-/* ═══════════════════════════════════════════════
-   HOME SCREEN
-═══════════════════════════════════════════════ */
-#homeScreen{
-  align-items:center;justify-content:center;gap:18px;
-  padding:20px 16px;overflow-y:auto;
-}
-#homeScreen{background-color:#0d2018;background-image:radial-gradient(ellipse at 50% 0%,rgba(30,80,40,0.5) 0%,transparent 60%),linear-gradient(180deg,#0e2318 0%,#091a10 100%)}
+        /* --- SPLASH SCREEN --- */
+        #splash-screen { background: #03140e; z-index: 100; }
+        .splash-logo { font-size: 80px; margin-bottom: 20px; filter: drop-shadow(0 0 20px #ffd700); }
+        .loading-bar-container { width: 200px; height: 10px; border: 2px solid #8b4513; border-radius: 10px; background: #2a1a0b; margin-top: 20px; overflow: hidden; }
+        .loading-bar { height: 100%; width: 0%; background: linear-gradient(90deg, #ffd700, #ff8c00); transition: width 0.1s; }
+        .loading-text { margin-top: 10px; font-size: 12px; color: #ffd700; letter-spacing: 2px; }
 
-.home-logo{text-align:center}
-.home-piece-icon{font-size:56px;line-height:1;filter:drop-shadow(0 4px 12px rgba(212,168,67,0.6));display:block}
-.home-title{
-  font-size:30px;font-weight:700;letter-spacing:4px;margin-top:6px;
-  background:linear-gradient(180deg,#f5c842 0%,#d4a843 50%,#9a6f15 100%);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-  text-shadow:none;
-}
-.home-sub{font-size:11px;letter-spacing:5px;color:#8a7a50;margin-top:3px;text-transform:uppercase}
+        /* --- MENU SCREEN --- */
+        #menu-screen { gap: 15px; }
+        .menu-title { font-family: 'Cinzel', serif; font-size: 28px; color: #ffd700; text-shadow: 0 4px 10px rgba(0,0,0,0.8); margin-bottom: 30px; }
+        .menu-btn {
+            width: 280px; height: 60px;
+            background: linear-gradient(to bottom, #00d2ff, #007bb5);
+            border: 2px solid #005f8f;
+            border-radius: 10px;
+            color: white; font-size: 16px; font-weight: 800; letter-spacing: 1px;
+            box-shadow: inset 0 2px 5px rgba(255,255,255,0.5), 0 5px 15px rgba(0,0,0,0.8);
+            cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;
+        }
+        .menu-btn:active { transform: scale(0.95); box-shadow: 0 2px 5px rgba(0,0,0,0.8); }
+        .menu-btn.green { background: linear-gradient(to bottom, #39ff14, #008000); border-color: #005000; }
 
-.wood-card{
-  width:100%;max-width:350px;
-  background:linear-gradient(145deg,#6e3a12,#4a2408,#5c3010);
-  border:2px solid var(--gold-dark);
-  border-radius:14px;padding:14px;
-  box-shadow:0 4px 20px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.08);
-}
-.card-lbl{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#c8a050;margin-bottom:10px;font-weight:700}
+        /* --- GAME SCREEN --- */
+        .top-bar {
+            width: 100%; height: 60px; background: linear-gradient(to bottom, #8b4513, #3e1f06);
+            border-bottom: 3px solid #ffd700; display: flex; justify-content: space-between; align-items: center; padding: 0 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.8); z-index: 10;
+        }
+        .top-bar .profile { display: flex; align-items: center; gap: 10px; }
+        .profile-img { width: 40px; height: 40px; border-radius: 50%; border: 2px solid #ffd700; background: #fff; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+        .level-text { text-align: center; }
+        .level-text h3 { color: #ffd700; font-size: 14px; margin: 0; }
+        .level-text p { color: #fff; font-size: 10px; letter-spacing: 1px; margin: 0; }
+        .settings-btn { width: 40px; height: 40px; background: linear-gradient(to bottom, #ff4500, #8b0000); border: 2px solid #ffd700; border-radius: 5px; color: white; display: flex; justify-content: center; align-items: center; font-size: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
 
-.mode-row{display:flex;gap:10px}
-.mode-card{
-  flex:1;padding:12px 6px;text-align:center;
-  background:linear-gradient(145deg,#3d2008,#2a1405);
-  border:2px solid #6a4010;border-radius:10px;cursor:pointer;transition:all .2s;
-}
-.mode-card.sel{border-color:var(--gold);box-shadow:0 0 16px var(--gold-glow),inset 0 0 10px rgba(212,168,67,0.1)}
-.mode-card .mc-icon{font-size:22px;display:block;margin-bottom:4px}
-.mode-card .mc-label{font-size:11px;font-weight:700;color:#e8c060;letter-spacing:1px}
-.mode-card .mc-sub{font-size:9px;color:#8a6030;margin-top:2px}
+        .board-container { flex: 1; display: flex; justify-content: center; align-items: center; width: 100%; padding: 10px; }
+        
+        #board {
+            width: 95vw; height: 95vw; max-width: 450px; max-height: 450px;
+            display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr);
+            border: 8px solid transparent;
+            border-image: linear-gradient(to bottom right, #b8860b, #ffd700, #b8860b) 1;
+            background-color: #3e1f06;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.9);
+        }
 
-.btn-row{display:flex;gap:8px}
-.wood-btn{
-  flex:1;height:36px;
-  background:linear-gradient(180deg,#3d2008,#2a1405);
-  border:1.5px solid #6a4010;color:#c8a050;
-  border-radius:30px;font-size:10px;font-weight:700;cursor:pointer;
-  font-family:'Georgia',serif;letter-spacing:1px;transition:all .2s;
-}
-.wood-btn.sel{
-  border-color:var(--gold);color:var(--gold2);
-  background:linear-gradient(180deg,#6a4010,#3d2008);
-  box-shadow:0 0 10px var(--gold-glow);
-}
+        .sq { display: flex; justify-content: center; align-items: center; position: relative; }
+        .sq.light { background-color: #f0d9b5; }
+        .sq.dark { background-color: #b58863; }
+        .sq.selected { background-color: rgba(255, 215, 0, 0.6) !important; }
+        .sq.last-move { background-color: rgba(0, 255, 0, 0.3) !important; }
+        .legal-dot { width: 25%; height: 25%; background: rgba(0,0,0,0.3); border-radius: 50%; position: absolute; z-index: 2;}
 
-.start-btn{
-  width:100%;max-width:350px;height:54px;
-  background:linear-gradient(180deg,#f5c842,#d4a843,#9a6f15);
-  color:#3d1f08;border:none;border-radius:14px;
-  font-size:16px;font-weight:700;cursor:pointer;
-  font-family:'Georgia',serif;letter-spacing:3px;
-  box-shadow:0 6px 24px rgba(212,168,67,0.4),0 2px 0 rgba(255,255,255,0.2) inset;
-  transition:transform .15s,box-shadow .15s;
-}
-.start-btn:active{transform:scale(.97);box-shadow:0 2px 8px rgba(212,168,67,0.3)}
+        .piece { width: 90%; height: 90%; background-size: contain; background-repeat: no-repeat; background-position: center; z-index: 5; filter: drop-shadow(2px 5px 3px rgba(0,0,0,0.6)); pointer-events: none; }
 
-/* ═══════════════════════════════════════════════
-   GAME SCREEN
-═══════════════════════════════════════════════ */
-#gameScreen{background-color:#0d2018;background-image:linear-gradient(180deg,#0e2318 0%,#091510 100%)}
+        /* --- BOTTOM CONTROLS --- */
+        .bottom-bar {
+            width: 100%; height: 90px; background: linear-gradient(to top, #021a12, transparent);
+            display: flex; justify-content: space-evenly; align-items: center; padding-bottom: 10px;
+        }
+        .ctrl-item { display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; }
+        .ctrl-btn {
+            width: 50px; height: 50px; border-radius: 50%;
+            background: linear-gradient(145deg, #8b4513, #3e1f06);
+            border: 2px solid #b8860b;
+            box-shadow: inset 0 2px 5px rgba(255,255,255,0.2), 0 5px 10px rgba(0,0,0,0.8);
+            display: flex; justify-content: center; align-items: center; color: #ffd700; font-size: 22px;
+        }
+        .ctrl-item:active .ctrl-btn { transform: scale(0.90); box-shadow: inset 0 2px 10px rgba(0,0,0,0.8); }
+        .ctrl-label { font-size: 10px; color: #fff; font-weight: 800; letter-spacing: 1px; }
 
-/* ── Header Wood Banner ── */
-.game-header{
-  flex-shrink:0;position:relative;
-  height:64px;
-  background:linear-gradient(180deg,#8b5020 0%,#5c2e0a 40%,#4a2208 70%,#3d1c06 100%);
-  border-bottom:3px solid var(--gold-dark);
-  display:flex;align-items:center;justify-content:space-between;
-  padding:0 12px;
-  box-shadow:0 4px 16px rgba(0,0,0,0.6);
-}
-.game-header::before{
-  content:'';position:absolute;inset:0;
-  background:repeating-linear-gradient(90deg,transparent 0px,transparent 40px,rgba(255,255,255,0.02) 40px,rgba(255,255,255,0.02) 41px),
-    repeating-linear-gradient(180deg,rgba(255,255,255,0.04) 0px,rgba(255,255,255,0.04) 1px,transparent 1px,transparent 8px);
-  pointer-events:none;
-}
-.game-header::after{
-  content:'';position:absolute;bottom:0;left:0;right:0;height:3px;
-  background:linear-gradient(90deg,transparent,var(--gold),var(--gold2),var(--gold),transparent);
-}
-
-.avatar-wrap{position:relative;z-index:1}
-.avatar-circle{
-  width:48px;height:48px;border-radius:50%;
-  background:linear-gradient(145deg,#5a3010,#3a1a05);
-  border:3px solid var(--gold);
-  display:flex;align-items:center;justify-content:center;font-size:24px;
-  box-shadow:0 0 12px var(--gold-glow),0 4px 8px rgba(0,0,0,0.5);
-}
-.header-center{position:absolute;left:50%;transform:translateX(-50%);text-align:center;z-index:1}
-.header-level{font-size:16px;font-weight:700;color:var(--gold2);letter-spacing:2px}
-.header-diff{font-size:10px;letter-spacing:3px;color:#c8a050;margin-top:1px}
-.gear-btn{
-  width:44px;height:44px;position:relative;z-index:1;
-  background:linear-gradient(145deg,#8b1010,#6a0a0a);
-  border:2px solid #c03030;border-radius:4px;
-  display:flex;align-items:center;justify-content:center;
-  cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,0.5);
-}
-.gear-icon{font-size:22px;filter:drop-shadow(0 1px 3px rgba(255,100,100,0.5))}
-
-/* ── Level Info Bar ── */
-.level-bar{
-  flex-shrink:0;
-  background:linear-gradient(90deg,transparent,rgba(212,168,67,0.06),transparent);
-  border-bottom:1px solid rgba(212,168,67,0.15);
-  padding:5px 0;text-align:center;
-}
-.level-text{
-  font-size:14px;font-weight:700;letter-spacing:3px;
-  background:linear-gradient(180deg,var(--gold2),var(--gold));
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-}
-.diff-text{font-size:10px;letter-spacing:4px;color:#c8a050;margin-top:1px}
-
-/* ── Board Area ── */
-.board-area{
-  flex:1;display:flex;align-items:center;justify-content:center;
-  padding:8px;overflow:hidden;position:relative;
-}
-
-/* Golden board frame */
-.board-frame{
-  position:relative;
-  padding:12px;
-  background:linear-gradient(145deg,#f5c842,#d4a843,#9a6f15,#d4a843,#f5c842);
-  border-radius:8px;
-  box-shadow:
-    0 0 0 2px #6a4010,
-    0 8px 40px rgba(0,0,0,0.8),
-    0 0 60px rgba(212,168,67,0.15),
-    inset 0 1px 0 rgba(255,255,255,0.3);
-}
-.board-frame::before{
-  content:'';position:absolute;inset:3px;
-  background:linear-gradient(145deg,#c8a030,#f0b830,#8a6010,#f0b830,#c8a030);
-  border-radius:6px;z-index:0;
-}
-
-/* Rank/file labels on frame */
-.frame-labels-top,.frame-labels-bottom{
-  display:flex;position:absolute;left:12px;right:12px;
-  z-index:2;justify-content:space-around;pointer-events:none;
-}
-.frame-labels-top{top:2px}
-.frame-labels-bottom{bottom:2px}
-.frame-labels-left,.frame-labels-right{
-  display:flex;flex-direction:column;position:absolute;top:12px;bottom:12px;
-  z-index:2;justify-content:space-around;pointer-events:none;
-}
-.frame-labels-left{left:3px}
-.frame-labels-right{right:3px}
-.frame-lbl{
-  font-size:8px;font-weight:700;color:#3d1f08;
-  text-align:center;line-height:1;width:10px;
-  font-family:'Georgia',serif;
-}
-
-#board{
-  display:grid;grid-template-columns:repeat(8,1fr);
-  position:relative;z-index:1;
-  border-radius:2px;overflow:hidden;
-  width:min(80vw,380px);height:min(80vw,380px);
-  box-shadow:inset 0 0 20px rgba(0,0,0,0.4);
-}
-
-/* Squares */
-.sq{
-  position:relative;display:flex;align-items:center;justify-content:center;
-  cursor:pointer;transition:background .1s;aspect-ratio:1;overflow:hidden;
-}
-/* Wood grain squares */
-.sq.l{
-  background-color:var(--sq-light);
-  background-image:
-    repeating-linear-gradient(87deg,transparent,transparent 6px,rgba(0,0,0,0.02) 6px,rgba(0,0,0,0.02) 7px),
-    linear-gradient(175deg,#eedcaa,#d4b878,#e8d09a);
-}
-.sq.d{
-  background-color:var(--sq-dark);
-  background-image:
-    repeating-linear-gradient(87deg,transparent,transparent 5px,rgba(0,0,0,0.06) 5px,rgba(0,0,0,0.06) 6px),
-    linear-gradient(175deg,#9a6835,#6a4018,#8a5828);
-}
-
-/* Highlights */
-.sq.sel-sq{background:#e8c040!important;box-shadow:inset 0 0 12px rgba(255,200,0,0.6)}
-.sq.mv-from{background:rgba(232,192,64,0.55)!important}
-.sq.mv-to{background:rgba(232,192,64,0.7)!important}
-.sq.chk-sq{background:radial-gradient(circle,rgba(255,60,60,0.9),rgba(180,20,20,0.7))!important}
-
-/* Legal move dots */
-.leg-dot{
-  position:absolute;width:30%;height:30%;border-radius:50%;
-  background:rgba(0,0,0,0.28);pointer-events:none;z-index:4;
-  top:50%;left:50%;transform:translate(-50%,-50%);
-}
-.sq.l .leg-dot{background:rgba(80,40,0,0.22)}
-.sq.d .leg-dot{background:rgba(255,220,100,0.28)}
-.leg-ring{
-  position:absolute;inset:6%;border-radius:50%;
-  border:4px solid rgba(0,0,0,0.28);pointer-events:none;z-index:4;
-}
-.sq.l .leg-ring{border-color:rgba(80,40,0,0.22)}
-.sq.d .leg-ring{border-color:rgba(255,220,100,0.28)}
-
-/* Coord labels in corners */
-.sq-rank{position:absolute;left:2px;top:1px;font-size:7px;font-weight:700;opacity:.5;z-index:5;pointer-events:none}
-.sq-file{position:absolute;right:2px;bottom:1px;font-size:7px;font-weight:700;opacity:.5;z-index:5;pointer-events:none}
-.sq.l .sq-rank,.sq.l .sq-file{color:#6a4018}
-.sq.d .sq-rank,.sq.d .sq-file{color:#e8d0a0}
-
-/* ── Move History ── */
-.history-wrap{
-  flex-shrink:0;
-  background:linear-gradient(180deg,rgba(10,20,12,0.9),rgba(8,16,10,0.95));
-  border-top:1px solid rgba(212,168,67,0.2);
-  padding:4px 0 2px;
-}
-.hist-inner{display:flex;overflow-x:auto;padding:3px 12px 5px;gap:5px;scrollbar-width:none}
-.hist-inner::-webkit-scrollbar{display:none}
-.move-pill{
-  flex-shrink:0;padding:3px 8px;border-radius:20px;font-size:9px;
-  background:rgba(212,168,67,0.08);border:1px solid rgba(212,168,67,0.2);
-  color:#8a7040;white-space:nowrap;font-family:'Georgia',serif;
-}
-.move-pill.w{color:#d4a843}
-.move-pill.latest{border-color:var(--gold);color:var(--gold2)}
-
-/* ── Footer Control Bar ── */
-.ctrl-footer{
-  flex-shrink:0;
-  background:linear-gradient(180deg,#1a3020,#0d2018);
-  border-top:2px solid rgba(212,168,67,0.25);
-  padding:10px 16px 14px;
-  display:flex;align-items:center;justify-content:space-around;
-}
-
-/* Circular metallic buttons */
-.circ-btn{
-  display:flex;flex-direction:column;align-items:center;gap:5px;
-  cursor:pointer;background:none;border:none;
-}
-.circ-inner{
-  width:58px;height:58px;border-radius:50%;
-  background:linear-gradient(145deg,#8b5010,#4a2408,#6a3808);
-  border:3px solid transparent;
-  background-clip:padding-box;
-  position:relative;
-  display:flex;align-items:center;justify-content:center;
-  box-shadow:
-    0 4px 12px rgba(0,0,0,0.6),
-    0 1px 0 rgba(255,255,255,0.1) inset,
-    0 -2px 0 rgba(0,0,0,0.3) inset;
-  transition:transform .15s,box-shadow .15s;
-}
-/* Gold ring using pseudo */
-.circ-inner::before{
-  content:'';position:absolute;inset:-3px;border-radius:50%;
-  background:linear-gradient(145deg,#f5c842,#9a6f15,#f5c842,#9a6f15);
-  z-index:-1;
-}
-.circ-inner::after{
-  content:'';position:absolute;inset:-4px;border-radius:50%;
-  background:rgba(0,0,0,0.4);z-index:-2;
-}
-.circ-inner:active,.circ-btn:active .circ-inner{
-  transform:scale(.92);
-  box-shadow:0 2px 6px rgba(0,0,0,0.6),0 0 14px var(--gold-glow);
-}
-.circ-icon{font-size:22px;line-height:1;filter:drop-shadow(0 1px 4px rgba(0,0,0,0.7))}
-.circ-label{
-  font-size:9px;font-weight:700;letter-spacing:1.5px;
-  background:linear-gradient(180deg,var(--gold2),var(--gold));
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-  font-family:'Georgia',serif;
-}
-
-/* ═══════════════════════════════════════════════
-   SVG PIECES  (3D-styled with gradients & shadow)
-═══════════════════════════════════════════════ */
-.piece-svg{
-  width:88%;height:88%;z-index:3;pointer-events:none;
-  filter:drop-shadow(0 3px 5px rgba(0,0,0,0.7));
-  transition:transform .08s;
-}
-.sq:active .piece-svg{transform:scale(1.12)}
-
-/* ═══════════════════════════════════════════════
-   OVERLAYS
-═══════════════════════════════════════════════ */
-.overlay{
-  display:none;position:fixed;inset:0;
-  background:rgba(5,10,8,0.88);z-index:200;
-  align-items:center;justify-content:center;padding:20px;
-  backdrop-filter:blur(6px);
-}
-.overlay.show{display:flex}
-.modal{
-  background:linear-gradient(145deg,#3d2008,#2a1405,#3a1c07);
-  border:2px solid var(--gold-dark);border-radius:20px;
-  padding:28px 22px;text-align:center;
-  width:100%;max-width:300px;
-  box-shadow:0 20px 60px rgba(0,0,0,0.9),0 0 30px rgba(212,168,67,0.1);
-}
-.modal-icon{font-size:52px;margin-bottom:12px;display:block}
-.modal-title{
-  font-size:22px;font-weight:700;letter-spacing:2px;margin-bottom:8px;
-  background:linear-gradient(180deg,var(--gold2),var(--gold));
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-}
-.modal-msg{font-size:13px;color:#c8a060;margin-bottom:24px;line-height:1.6}
-.modal-btns{display:flex;flex-direction:column;gap:10px}
-.modal-btn{
-  height:48px;border-radius:12px;font-size:14px;font-weight:700;
-  cursor:pointer;border:none;font-family:'Georgia',serif;letter-spacing:1px;
-  transition:transform .15s;
-}
-.modal-btn.primary{
-  background:linear-gradient(180deg,#f5c842,#d4a843,#9a6f15);
-  color:#3d1f08;box-shadow:0 4px 12px rgba(212,168,67,0.4);
-}
-.modal-btn.secondary{
-  background:linear-gradient(145deg,#3d2008,#2a1405);
-  color:#c8a050;border:1.5px solid #6a4010;
-}
-.modal-btn:active{transform:scale(.96)}
-
-/* Promo */
-.promo-grid{display:flex;gap:12px;justify-content:center;margin-top:10px}
-.promo-item{
-  width:62px;height:62px;border-radius:12px;
-  background:linear-gradient(145deg,#3d2008,#2a1405);
-  border:2px solid #6a4010;
-  display:flex;align-items:center;justify-content:center;
-  cursor:pointer;transition:all .2s;
-}
-.promo-item:active{border-color:var(--gold);background:rgba(212,168,67,0.12);transform:scale(1.08)}
-.promo-item svg{width:42px;height:42px}
-
-/* Settings */
-#settingsModal .modal{text-align:left;max-width:320px}
-.sett-row{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:12px 0;border-bottom:1px solid rgba(212,168,67,0.15);
-}
-.sett-row:last-child{border-bottom:none}
-.sett-lbl{font-size:13px;font-weight:700;color:#e8c060}
-.sett-desc{font-size:9px;color:#8a6030;margin-top:2px;letter-spacing:1px}
-.toggle{
-  width:44px;height:26px;border-radius:13px;
-  background:rgba(212,168,67,0.15);border:1px solid #6a4010;
-  position:relative;cursor:pointer;transition:background .2s;flex-shrink:0;
-}
-.toggle.on{background:linear-gradient(90deg,#d4a843,#f5c842);border-color:var(--gold)}
-.toggle::after{
-  content:'';position:absolute;width:20px;height:20px;border-radius:50%;
-  background:#f0e0c0;top:2px;left:2px;transition:left .2s;
-  box-shadow:0 1px 4px rgba(0,0,0,0.5);
-}
-.toggle.on::after{left:20px}
-
-/* Toast */
-#toast{
-  position:fixed;top:75px;left:50%;
-  transform:translateX(-50%) translateY(-6px);
-  background:linear-gradient(135deg,rgba(80,20,10,0.97),rgba(60,10,5,0.97));
-  border:1.5px solid rgba(220,60,60,0.6);
-  color:#ff8080;padding:9px 22px;border-radius:30px;
-  font-size:13px;font-weight:700;z-index:300;
-  opacity:0;transition:opacity .25s,transform .25s;
-  pointer-events:none;letter-spacing:2px;
-  font-family:'Georgia',serif;
-  box-shadow:0 4px 20px rgba(0,0,0,0.6);
-}
-#toast.gold{color:var(--gold2);border-color:rgba(212,168,67,0.5);background:linear-gradient(135deg,rgba(60,30,5,0.97),rgba(40,20,5,0.97))}
-#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-</style>
+        /* Game Over Modal */
+        #modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 200; align-items: center; justify-content: center; }
+        .modal-content { background: linear-gradient(to bottom, #8b4513, #3e1f06); border: 3px solid #ffd700; padding: 30px; border-radius: 15px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,1); }
+        .modal-content h2 { color: #ffd700; margin-bottom: 10px; }
+        .modal-btn { background: #ffd700; color: #000; border: none; padding: 10px 20px; font-weight: bold; border-radius: 5px; margin-top: 15px; cursor: pointer; }
+    </style>
 </head>
 <body>
 
-<!-- ═══════════════════════════════════════════════
-     HOME SCREEN
-═══════════════════════════════════════════════ -->
-<div id="homeScreen" class="screen active">
-  <div class="home-logo">
-    <span class="home-piece-icon">♛</span>
-    <div class="home-title">CHESS MASTER</div>
-    <div class="home-sub">3D Professional Edition</div>
-  </div>
-
-  <div class="wood-card">
-    <div class="card-lbl">Game Mode</div>
-    <div class="mode-row">
-      <div class="mode-card sel" id="modePvP" onclick="selMode('pvp')">
-        <span class="mc-icon">👥</span>
-        <div class="mc-label">2 PLAYERS</div>
-        <div class="mc-sub">Local</div>
-      </div>
-      <div class="mode-card" id="modePvAI" onclick="selMode('ai')">
-        <span class="mc-icon">🤖</span>
-        <div class="mc-label">vs COMPUTER</div>
-        <div class="mc-sub">AI Opponent</div>
-      </div>
+    <div id="splash-screen" class="screen active-screen">
+        <div class="splash-logo">♟️</div>
+        <h1 style="color:#ffd700; font-family:'Cinzel', serif; letter-spacing:3px;">CHESS MASTER</h1>
+        <div class="loading-bar-container"><div class="loading-bar" id="l-bar"></div></div>
+        <div class="loading-text" id="l-text">LOADING...</div>
     </div>
-  </div>
 
-  <div class="wood-card" id="diffCard" style="display:none">
-    <div class="card-lbl">AI Difficulty</div>
-    <div class="btn-row">
-      <button class="wood-btn sel" onclick="selDiff(this,'easy')">😊 EASY</button>
-      <button class="wood-btn" onclick="selDiff(this,'medium')">🎯 MEDIUM</button>
-      <button class="wood-btn" onclick="selDiff(this,'hard')">🔥 HARD</button>
+    <div id="menu-screen" class="screen">
+        <div class="splash-logo" style="font-size: 60px;">♟️</div>
+        <div class="menu-title">CHOOSE YOUR MODE</div>
+        <div class="menu-btn green" onclick="startGame('ai')">🤖 PLAY VS COMPUTER</div>
+        <div class="menu-btn" onclick="startGame('pvp')">👥 2 PLAYERS</div>
     </div>
-  </div>
 
-  <div class="wood-card">
-    <div class="card-lbl">Time Control</div>
-    <div class="btn-row">
-      <button class="wood-btn" onclick="selTime(this,180)">3 MIN</button>
-      <button class="wood-btn sel" onclick="selTime(this,600)">10 MIN</button>
-      <button class="wood-btn" onclick="selTime(this,900)">15 MIN</button>
-      <button class="wood-btn" onclick="selTime(this,0)">∞</button>
+    <div id="game-screen" class="screen">
+        <div class="top-bar">
+            <div class="profile" onclick="backToMenu()">
+                <div class="profile-img">◀</div>
+            </div>
+            <div class="level-text">
+                <h3>LEVEL 1</h3>
+                <p id="game-mode-text">BEGINNER</p>
+            </div>
+            <div class="settings-btn">⚙️</div>
+        </div>
+
+        <div class="board-container"><div id="board"></div></div>
+
+        <div class="bottom-bar">
+            <div class="ctrl-item" onclick="resetGame()">
+                <div class="ctrl-btn">🔄</div>
+                <div class="ctrl-label">RESTART</div>
+            </div>
+            <div class="ctrl-item">
+                <div class="ctrl-btn">♖</div>
+                <div class="ctrl-label">PIECES</div>
+            </div>
+            <div class="ctrl-item" onclick="undoMove()">
+                <div class="ctrl-btn">↩</div>
+                <div class="ctrl-label">UNDO</div>
+            </div>
+            <div class="ctrl-item" onclick="hintMove()">
+                <div class="ctrl-btn" style="border-color: #ff4500; color: #ff4500;">💡</div>
+                <div class="ctrl-label">HINT</div>
+            </div>
+        </div>
     </div>
-  </div>
 
-  <button class="start-btn" onclick="startGame()">▶&nbsp;&nbsp;START GAME</button>
-</div>
-
-<!-- ═══════════════════════════════════════════════
-     GAME SCREEN
-═══════════════════════════════════════════════ -->
-<div id="gameScreen" class="screen">
-
-  <!-- Wood Header Banner -->
-  <div class="game-header">
-    <div class="avatar-wrap">
-      <div class="avatar-circle" id="avatarEl">♔</div>
+    <div id="modal">
+        <div class="modal-content">
+            <h2 id="modal-title">GAME OVER</h2>
+            <p id="modal-desc" style="color:white;"></p>
+            <button class="modal-btn" onclick="backToMenu()">MAIN MENU</button>
+        </div>
     </div>
-    <div class="header-center">
-      <div class="header-level" id="hLevel">LEVEL 1</div>
-      <div class="header-diff" id="hDiff">EASY</div>
-    </div>
-    <div class="gear-btn" onclick="openSettings()">
-      <span class="gear-icon">⚙</span>
-    </div>
-  </div>
 
-  <!-- Clock row -->
-  <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 16px;background:rgba(0,0,0,0.3);flex-shrink:0">
-    <div style="text-align:left">
-      <div style="font-size:9px;letter-spacing:2px;color:#6a8060">OPPONENT</div>
-      <div id="clockTop" style="font-size:20px;font-weight:700;color:#c8a843;font-family:Georgia,serif;letter-spacing:2px">10:00</div>
-    </div>
-    <div style="display:flex;gap:6px;align-items:center">
-      <div id="capturedTop" style="font-size:10px;color:#a08040;min-height:14px"></div>
-      <div id="advTop" style="font-size:10px;color:#80c060;font-weight:700"></div>
-    </div>
-    <div style="text-align:right">
-      <div style="font-size:9px;letter-spacing:2px;color:#6a8060">PLAYER</div>
-      <div id="clockBot" style="font-size:20px;font-weight:700;color:#c8a843;font-family:Georgia,serif;letter-spacing:2px">10:00</div>
-    </div>
-  </div>
-
-  <!-- AI Thinking Bar -->
-  <div style="height:3px;background:rgba(212,168,67,0.1);flex-shrink:0;overflow:hidden">
-    <div id="thinkFill" style="height:100%;width:0;background:linear-gradient(90deg,#d4a843,#f5c842);border-radius:2px;transition:width .1s"></div>
-  </div>
-
-  <!-- Board -->
-  <div class="board-area">
-    <div class="board-frame">
-      <div id="board"></div>
-    </div>
-  </div>
-
-  <!-- Move History -->
-  <div class="history-wrap">
-    <div class="hist-inner" id="histEl"></div>
-  </div>
-
-  <!-- Footer Circular Buttons -->
-  <div class="ctrl-footer">
-    <button class="circ-btn" onclick="newGame()">
-      <div class="circ-inner"><span class="circ-icon">↺</span></div>
-      <span class="circ-label">RESTART</span>
-    </button>
-    <button class="circ-btn" onclick="openSettings()">
-      <div class="circ-inner"><span class="circ-icon">♜</span></div>
-      <span class="circ-label">PIECES</span>
-    </button>
-    <button class="circ-btn" onclick="undoMove()">
-      <div class="circ-inner"><span class="circ-icon">↩</span></div>
-      <span class="circ-label">UNDO</span>
-    </button>
-    <button class="circ-btn" onclick="showHint()">
-      <div class="circ-inner"><span class="circ-icon">💡</span></div>
-      <span class="circ-label">HINT</span>
-    </button>
-  </div>
-</div>
-
-<!-- ═══════════════════════════════════════════════
-     MODALS
-═══════════════════════════════════════════════ -->
-<div class="overlay" id="endModal">
-  <div class="modal">
-    <span class="modal-icon" id="endIcon">🏆</span>
-    <div class="modal-title" id="endTitle">Game Over</div>
-    <div class="modal-msg" id="endMsg"></div>
-    <div class="modal-btns">
-      <button class="modal-btn primary" onclick="newGame()">Play Again</button>
-      <button class="modal-btn secondary" onclick="goHome()">Main Menu</button>
-    </div>
-  </div>
-</div>
-
-<div class="overlay" id="promoModal">
-  <div class="modal">
-    <span class="modal-icon">♟</span>
-    <div class="modal-title">PROMOTION!</div>
-    <div class="modal-msg" style="color:#c8a060">Choose your piece</div>
-    <div class="promo-grid" id="promoGrid"></div>
-  </div>
-</div>
-
-<div class="overlay" id="settingsModal">
-  <div class="modal" style="text-align:left;max-width:320px">
-    <div class="modal-title" style="text-align:center;margin-bottom:14px">⚙ SETTINGS</div>
-    <div class="sett-row">
-      <div><div class="sett-lbl">Sound Effects</div><div class="sett-desc">WOODEN PIECE SOUNDS</div></div>
-      <div class="toggle on" id="togSound" onclick="togSett('sound')"></div>
-    </div>
-    <div class="sett-row">
-      <div><div class="sett-lbl">Haptic Feedback</div><div class="sett-desc">VIBRATION ON MOVE</div></div>
-      <div class="toggle on" id="togHaptic" onclick="togSett('haptic')"></div>
-    </div>
-    <div class="sett-row">
-      <div><div class="sett-lbl">Show Hints</div><div class="sett-desc">LEGAL MOVE DOTS</div></div>
-      <div class="toggle on" id="togHints" onclick="togSett('hints')"></div>
-    </div>
-    <div class="sett-row">
-      <div><div class="sett-lbl">Coordinates</div><div class="sett-desc">A-H, 1-8 LABELS</div></div>
-      <div class="toggle on" id="togCoords" onclick="togSett('coords')"></div>
-    </div>
-    <div class="modal-btns" style="margin-top:14px">
-      <button class="modal-btn primary" onclick="closeSettings()">DONE</button>
-      <button class="modal-btn secondary" onclick="goHome()">MAIN MENU</button>
-    </div>
-  </div>
-</div>
-
-<div id="toast"></div>
-
-<!-- ═══════════════════════════════════════════════
-     SVG PIECE DEFS  (3D Metallic style)
-═══════════════════════════════════════════════ -->
-<svg style="display:none">
-<defs>
-<!-- WHITE PIECES — Silver/Chrome gradient -->
-<linearGradient id="wGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-  <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1"/>
-  <stop offset="40%" style="stop-color:#d0d8e8;stop-opacity:1"/>
-  <stop offset="100%" style="stop-color:#8090a8;stop-opacity:1"/>
-</linearGradient>
-<linearGradient id="wGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
-  <stop offset="0%" style="stop-color:#e8eef8;stop-opacity:1"/>
-  <stop offset="100%" style="stop-color:#6878a0;stop-opacity:1"/>
-</linearGradient>
-<!-- BLACK PIECES — Dark Ebony/Metallic gradient -->
-<linearGradient id="bGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-  <stop offset="0%" style="stop-color:#6065a0;stop-opacity:1"/>
-  <stop offset="40%" style="stop-color:#252535;stop-opacity:1"/>
-  <stop offset="100%" style="stop-color:#0e0e18;stop-opacity:1"/>
-</linearGradient>
-<linearGradient id="bGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
-  <stop offset="0%" style="stop-color:#404060;stop-opacity:1"/>
-  <stop offset="100%" style="stop-color:#0a0a18;stop-opacity:1"/>
-</linearGradient>
-<!-- Shine overlay -->
-<linearGradient id="shine" x1="0%" y1="0%" x2="60%" y2="100%">
-  <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.35"/>
-  <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0"/>
-</linearGradient>
-
-<!-- ██ WHITE KING ██ -->
-<symbol id="wK" viewBox="0 0 45 45">
-  <g stroke="#708090" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
-    <rect x="17" y="5" width="11" height="3" rx="1.5" fill="url(#wGrad)"/>
-    <rect x="20.5" y="5" width="4" height="9" rx="2" fill="url(#wGrad)"/>
-    <path d="M10 36c3.5 2.5 11 3.5 12.5 3.5s9-1 12.5-3.5v-7c0 0 7-4 4.5-9.5-3-6.5-11-4-13.5 2v-3.5s-4.5-3.5-9 0c-5.5 5 2 10.5 2 10.5v7z" fill="url(#wGrad)"/>
-    <path d="M10 36c3.5-2.5 11-3 12.5-3s9 .5 12.5 3" fill="none" stroke="#b0c0d0" stroke-width="1"/>
-    <path d="M10 33c3.5-2 11-2.5 12.5-2.5s9 .5 12.5 2.5" fill="none" stroke="#b0c0d0" stroke-width="1"/>
-    <path d="M22.5 25c0 0 4-6.5 2.5-9.5 0 0-.8-2.2-2.5-2.2s-2.5 2.2-2.5 2.2c-1.5 3 2.5 9.5 2.5 9.5z" fill="url(#wGrad2)"/>
-    <ellipse cx="22.5" cy="38" rx="12" ry="2" fill="rgba(0,0,0,0.2)" stroke="none"/>
-    <path d="M14 22s2 1 8.5 1 8.5-1 8.5-1" fill="none" stroke="#b0c0d0" stroke-width=".8"/>
-  </g>
-  <path d="M12 18 Q22.5 14 33 18" fill="url(#shine)" stroke="none" opacity=".5"/>
-</symbol>
-
-<!-- ██ WHITE QUEEN ██ -->
-<symbol id="wQ" viewBox="0 0 45 45">
-  <g stroke="#708090" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
-    <circle cx="7" cy="11" r="2.5" fill="url(#wGrad)"/>
-    <circle cx="22.5" cy="7" r="2.5" fill="url(#wGrad)"/>
-    <circle cx="38" cy="11" r="2.5" fill="url(#wGrad)"/>
-    <circle cx="14" cy="8.5" r="2" fill="url(#wGrad)"/>
-    <circle cx="31" cy="8.5" r="2" fill="url(#wGrad)"/>
-    <path d="M7 14 L10 30h25l3-16-8 10-2.5-12.5-3 14-5-17.5-5 17.5-3-14-8-10z" fill="url(#wGrad)"/>
-    <path d="M10 30c0 2 1.5 2.5 2.5 4 1 2 .5 1.5 .5 3.5h19c0-2-.5-1.5.5-3.5 1-1.5 2.5-2 2.5-4" fill="url(#wGrad)"/>
-    <path d="M10 34h25M10.5 37.5h24" fill="none" stroke="#b0c0d0" stroke-width=".8"/>
-    <ellipse cx="22.5" cy="39" rx="12.5" ry="1.8" fill="rgba(0,0,0,0.2)" stroke="none"/>
-  </g>
-  <path d="M11 16 Q22.5 12 34 16" fill="url(#shine)" stroke="none" opacity=".4"/>
-</symbol>
-
-<!-- ██ WHITE ROOK ██ -->
-<symbol id="wR" viewBox="0 0 45 45">
-  <g stroke="#708090" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M10 9h5v4h3V9h4.5v4h4V9h5v4l-2 3H14l-2-3V9z" fill="url(#wGrad)"/>
-    <rect x="12" y="16" width="21" height="16" rx="1" fill="url(#wGrad)"/>
-    <path d="M12 32h21l2 3.5v3.5H10V35.5l2-3.5z" fill="url(#wGrad)"/>
-    <path d="M10 36h25M12 32h21" fill="none" stroke="#b0c0d0" stroke-width=".8"/>
-    <ellipse cx="22.5" cy="39.5" rx="12.5" ry="1.5" fill="rgba(0,0,0,0.2)" stroke="none"/>
-  </g>
-  <rect x="14" y="18" width="8" height="12" rx="1" fill="url(#shine)" opacity=".3"/>
-</symbol>
-
-<!-- ██ WHITE BISHOP ██ -->
-<symbol id="wB" viewBox="0 0 45 45">
-  <g stroke="#708090" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
-    <circle cx="22.5" cy="8" r="3" fill="url(#wGrad)"/>
-    <path d="M17 32C17 20 11 16 15 11c2.5-3.5 7.5-3 7.5-3s5-.5 7.5 3c4 5 0 9-6 21" fill="url(#wGrad)"/>
-    <path d="M10 36.5c0-2 1.5-2.5 2.5-4.5.5-1 .5-1 .5-3 0-1.5-.5-1-1.5-2.5l.5-1c0 0 11.5-2 20 .5l.5 1c-1 1.5-1.5 1-1.5 2.5 0 2 0 2 .5 3 1 2 2.5 2.5 2.5 4.5z" fill="url(#wGrad)"/>
-    <path d="M11 36h23M11.5 32.5h22" fill="none" stroke="#b0c0d0" stroke-width=".8"/>
-    <ellipse cx="22.5" cy="38.5" rx="12" ry="1.8" fill="rgba(0,0,0,0.2)" stroke="none"/>
-  </g>
-  <path d="M17 12 Q22.5 9 28 12" fill="url(#shine)" stroke="none" opacity=".5"/>
-</symbol>
-
-<!-- ██ WHITE KNIGHT ██ -->
-<symbol id="wN" viewBox="0 0 45 45">
-  <g stroke="#708090" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M22 10c9 1 15 7.5 15 27H14c0-8 9-6 7.5-19" fill="url(#wGrad)"/>
-    <path d="M24 17c.3 4.5-5 6.3-5.5 10.7-.15 1.2-.4 2.8.8 3.8H14c2.4-7.8-.25-17-2.75-20.5l3.2-.9 5 4.1 1.3-1.3-.45 4.8z" fill="url(#wGrad2)"/>
-    <circle cx="9.5" cy="25" r="1.2" fill="#6080a0"/>
-    <ellipse cx="15" cy="15.5" cx2="15" cy2="15" rx="2.2" ry="1.2" transform="rotate(-30 15 15.5)" fill="#6080a0"/>
-    <path d="M15 15.5c.4-1.8.9-3.2 2.8-4.6 1-.75 2.2-1.1 3.7-.9" fill="none" stroke="#a0b8d0"/>
-    <ellipse cx="22.5" cy="38.5" rx="11.5" ry="1.8" fill="rgba(0,0,0,0.2)" stroke="none"/>
-  </g>
-  <path d="M20 12 Q26 10 30 14" fill="url(#shine)" stroke="none" opacity=".4"/>
-</symbol>
-
-<!-- ██ WHITE PAWN ██ -->
-<symbol id="wP" viewBox="0 0 45 45">
-  <g stroke="#708090" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
-    <circle cx="22.5" cy="11" r="4.5" fill="url(#wGrad)"/>
-    <path d="M17.5 22c0-3.5 2.5-7 5-7s5 3.5 5 7" fill="url(#wGrad)"/>
-    <ellipse cx="22.5" cy="22" rx="5" ry="2" fill="url(#wGrad)"/>
-    <path d="M15 33c0-5.5 3.5-11 7.5-11s7.5 5.5 7.5 11" fill="url(#wGrad)"/>
-    <ellipse cx="22.5" cy="33" rx="7.5" ry="2.5" fill="url(#wGrad)"/>
-    <path d="M12 36.5c0-2 .5-1.5 1.5-2.5 1-.8 9-1.5 9-1.5s8 .7 9 1.5c1 1 1.5.5 1.5 2.5z" fill="url(#wGrad)"/>
-    <ellipse cx="22.5" cy="38.5" rx="10.5" ry="1.8" fill="rgba(0,0,0,0.2)" stroke="none"/>
-  </g>
-  <ellipse cx="20" cy="9" rx="2" ry="1.5" fill="url(#shine)" opacity=".6"/>
-</symbol>
-
-<!-- ██ BLACK KING ██ -->
-<symbol id="bK" viewBox="0 0 45 45">
-  <g stroke="#303050" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
-    <rect x="17" y="5" width="11" height="3" rx="1.5" fill="url(#bGrad)"/>
-    <rect x="20.5" y="5" width="4" height="9" rx="2" fill="url(#bGrad)"/>
-    <path d="M10 36c3.5 2.5 11 3.5 12.5 3.5s9-1 12.5-3.5v-7c0 0 7-4 4.5-9.5-3-6.5-11-4-13.5 2v-3.5s-4.5-3.5-9 0c-5.5 5 2 10.5 2 10.5v7z" fill="url(#bGrad)"/>
-    <path d="M10 36c3.5-2.5 11-3 12.5-3s9 .5 12.5 3" fill="none" stroke="#5060a0" stroke-width="1"/>
-    <path d="M10 33c3.5-2 11-2.5 12.5-2.5s9 .5 12.5 2.5" fill="none" stroke="#5060a0" stroke-width="1"/>
-    <path d="M22.5 25c0 0 4-6.5 2.5-9.5 0 0-.8-2.2-2.5-2.2s-2.5 2.2-2.5 2.2c-1.5 3 2.5 9.5 2.5 9.5z" fill="url(#bGrad2)"/>
-    <ellipse cx="22.5" cy="38" rx="12" ry="2" fill="rgba(0,0,0,0.3)" stroke="none"/>
-  </g>
-  <path d="M14 18 Q22.5 14 31 18" fill="url(#shine)" stroke="none" opacity=".2"/>
-</symbol>
-
-<!-- ██ BLACK QUEEN ██ -->
-<symbol id="bQ" viewBox="0 0 45 45">
-  <g stroke="#303050" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
-    <circle cx="7" cy="11" r="2.5" fill="url(#bGrad)"/>
-    <circle cx="22.5" cy="7" r="2.5" fill="url(#bGrad)"/>
-    <circle cx="38" cy="11" r="2.5" fill="url(#bGrad)"/>
-    <circle cx="14" cy="8.5" r="2" fill="url(#bGrad)"/>
-    <circle cx="31" cy="8.5" r="2" fill="url(#bGrad)"/>
-    <path d="M7 14 L10 30h25l3-16-8 10-2.5-12.5-3 14-5-17.5-5 17.5-3-14-8-10z" fill="url(#bGrad)"/>
-    <path d="M10 30c0 2 1.5 2.5 2.5 4 1 2 .5 1.5 .5 3.5h19c0-2-.5-1.5.5-3.5 1-1.5 2.5-2 2.5-4" fill="url(#bGrad)"/>
-    <path d="M10 34h25M10.5 37.5h24" fill="none" stroke="#5060a0" stroke-width=".8"/>
-    <ellipse cx="22.5" cy="39" rx="12.5" ry="1.8" fill="rgba(0,0,0,0.3)" stroke="none"/>
-  </g>
-  <path d="M13 16 Q22.5 12 32 16" fill="url(#shine)" stroke="none" opacity=".18"/>
-</symbol>
-
-<!-- ██ BLACK ROOK ██ -->
-<symbol id="bR" viewBox="0 0 45 45">
-  <g stroke="#303050" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M10 9h5v4h3V9h4.5v4h4V9h5v4l-2 3H14l-2-3V9z" fill="url(#bGrad)"/>
-    <rect x="12" y="16" width="21" height="16" rx="1" fill="url(#bGrad)"/>
-    <path d="M12 32h21l2 3.5v3.5H10V35.5l2-3.5z" fill="url(#bGrad)"/>
-    <path d="M10 36h25M12 32h21" fill="none" stroke="#5060a0" stroke-width=".8"/>
-    <ellipse cx="22.5" cy="39.5" rx="12.5" ry="1.5" fill="rgba(0,0,0,0.3)" stroke="none"/>
-  </g>
-  <rect x="14" y="18" width="6" height="10" rx="1" fill="url(#shine)" opacity=".15"/>
-</symbol>
-
-<!-- ██ BLACK BISHOP ██ -->
-<symbol id="bB" viewBox="0 0 45 45">
-  <g stroke="#303050" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
-    <circle cx="22.5" cy="8" r="3" fill="url(#bGrad)"/>
-    <path d="M17 32C17 20 11 16 15 11c2.5-3.5 7.5-3 7.5-3s5-.5 7.5 3c4 5 0 9-6 21" fill="url(#bGrad)"/>
-    <path d="M10 36.5c0-2 1.5-2.5 2.5-4.5.5-1 .5-1 .5-3 0-1.5-.5-1-1.5-2.5l.5-1c0 0 11.5-2 20 .5l.5 1c-1 1.5-1.5 1-1.5 2.5 0 2 0 2 .5 3 1 2 2.5 2.5 2.5 4.5z" fill="url(#bGrad)"/>
-    <path d="M11 36h23M11.5 32.5h22" fill="none" stroke="#5060a0" stroke-width=".8"/>
-    <ellipse cx="22.5" cy="38.5" rx="12" ry="1.8" fill="rgba(0,0,0,0.3)" stroke="none"/>
-  </g>
-  <path d="M17 12 Q22.5 9 28 12" fill="url(#shine)" stroke="none" opacity=".18"/>
-</symbol>
-
-<!-- ██ BLACK KNIGHT ██ -->
-<symbol id="bN" viewBox="0 0 45 45">
-  <g stroke="#303050" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M22 10c9 1 15 7.5 15 27H14c0-8 9-6 7.5-19" fill="url(#bGrad)"/>
-    <path d="M24 17c.3 4.5-5 6.3-5.5 10.7-.15 1.2-.4 2.8.8 3.8H14c2.4-7.8-.25-17-2.75-20.5l3.2-.9 5 4.1 1.3-1.3-.45 4.8z" fill="url(#bGrad2)"/>
-    <circle cx="9.5" cy="25" r="1.2" fill="#8090c0"/>
-    <ellipse cx="15" cy="15.5" rx="2.2" ry="1.2" transform="rotate(-30 15 15.5)" fill="#8090c0"/>
-    <path d="M15 15.5c.4-1.8.9-3.2 2.8-4.6 1-.75 2.2-1.1 3.7-.9" fill="none" stroke="#8090c0"/>
-    <ellipse cx="22.5" cy="38.5" rx="11.5" ry="1.8" fill="rgba(0,0,0,0.3)" stroke="none"/>
-  </g>
-  <path d="M20 12 Q26 10 30 14" fill="url(#shine)" stroke="none" opacity=".15"/>
-</symbol>
-
-<!-- ██ BLACK PAWN ██ -->
-<symbol id="bP" viewBox="0 0 45 45">
-  <g stroke="#303050" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
-    <circle cx="22.5" cy="11" r="4.5" fill="url(#bGrad)"/>
-    <path d="M17.5 22c0-3.5 2.5-7 5-7s5 3.5 5 7" fill="url(#bGrad)"/>
-    <ellipse cx="22.5" cy="22" rx="5" ry="2" fill="url(#bGrad)"/>
-    <path d="M15 33c0-5.5 3.5-11 7.5-11s7.5 5.5 7.5 11" fill="url(#bGrad)"/>
-    <ellipse cx="22.5" cy="33" rx="7.5" ry="2.5" fill="url(#bGrad)"/>
-    <path d="M12 36.5c0-2 .5-1.5 1.5-2.5 1-.8 9-1.5 9-1.5s8 .7 9 1.5c1 1 1.5.5 1.5 2.5z" fill="url(#bGrad)"/>
-    <ellipse cx="22.5" cy="38.5" rx="10.5" ry="1.8" fill="rgba(0,0,0,0.3)" stroke="none"/>
-  </g>
-  <ellipse cx="20" cy="9" rx="2" ry="1.5" fill="url(#shine)" opacity=".25"/>
-</symbol>
-</defs>
-</svg>
-
-<!-- ═══════════════════════════════════════════════
-     JAVASCRIPT
-═══════════════════════════════════════════════ -->
 <script>
-/* ════════════════════════════════════════════
-   SETTINGS
-════════════════════════════════════════════ */
-const S = { mode:'pvp', diff:'easy', time:600, sound:true, haptic:true, hints:true, coords:true };
+    // Asset URLs (High Quality Standard SVGs)
+    const piecesURL = {
+        'wp': 'https://upload.wikimedia.org/wikipedia/commons/4/45/Chess_plt45.svg',
+        'wn': 'https://upload.wikimedia.org/wikipedia/commons/7/70/Chess_nlt45.svg',
+        'wb': 'https://upload.wikimedia.org/wikipedia/commons/b/b1/Chess_blt45.svg',
+        'wr': 'https://upload.wikimedia.org/wikipedia/commons/7/72/Chess_rlt45.svg',
+        'wq': 'https://upload.wikimedia.org/wikipedia/commons/1/15/Chess_qlt45.svg',
+        'wk': 'https://upload.wikimedia.org/wikipedia/commons/4/42/Chess_klt45.svg',
+        'bp': 'https://upload.wikimedia.org/wikipedia/commons/c/c7/Chess_pdt45.svg',
+        'bn': 'https://upload.wikimedia.org/wikipedia/commons/e/ed/Chess_ndt45.svg',
+        'bb': 'https://upload.wikimedia.org/wikipedia/commons/9/98/Chess_bdt45.svg',
+        'br': 'https://upload.wikimedia.org/wikipedia/commons/f/ff/Chess_rdt45.svg',
+        'bq': 'https://upload.wikimedia.org/wikipedia/commons/4/47/Chess_qdt45.svg',
+        'bk': 'https://upload.wikimedia.org/wikipedia/commons/f/f0/Chess_kdt45.svg'
+    };
 
-/* ════════════════════════════════════════════
-   GAME STATE
-════════════════════════════════════════════ */
-let chess, flipped=false, selected=null, legalSqs=[];
-let wTime, bTime, clockInt=null, clockOn=false;
-let gameOver=false, pendingPromo=null;
-let historyFens=[], levelCount=1;
+    // Splash Screen Logic
+    window.onload = () => {
+        let width = 0;
+        const bar = document.getElementById('l-bar');
+        const int = setInterval(() => {
+            width += 5;
+            bar.style.width = width + '%';
+            if(width >= 100) {
+                clearInterval(int);
+                setTimeout(() => {
+                    document.getElementById('splash-screen').classList.remove('active-screen');
+                    document.getElementById('menu-screen').classList.add('active-screen');
+                }, 300);
+            }
+        }, 50);
+    };
 
-/* ════════════════════════════════════════════
-   AUDIO ENGINE  — Pre-built synthesizer buffers
-   Zero lag, works on all mobile browsers
-════════════════════════════════════════════ */
-let AC = null;
-const audioBuffers = {};
+    // Game Logic
+    let game = new Chess();
+    let boardEl = document.getElementById('board');
+    let selectedSq = null;
+    let mode = 'pvp';
+    let lastMoveSq = null;
 
-function getAC() {
-  if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)();
-  return AC;
-}
-
-/* Build wooden "thud" sound synthetically */
-function buildWoodHit(freq=180, decay=0.18, vol=0.6) {
-  const ctx = getAC();
-  const rate = ctx.sampleRate;
-  const len = Math.floor(rate * (decay + 0.05));
-  const buf = ctx.createBuffer(1, len, rate);
-  const data = buf.getChannelData(0);
-  for (let i = 0; i < len; i++) {
-    const t = i / rate;
-    const env = Math.exp(-t / decay) * vol;
-    // Combine fundamental + harmonics for wood texture
-    data[i] = env * (
-      0.6 * Math.sin(2 * Math.PI * freq * t) +
-      0.25 * Math.sin(2 * Math.PI * freq * 1.7 * t) +
-      0.15 * (Math.random() * 2 - 1) * Math.exp(-t / 0.01)
-    );
-  }
-  return buf;
-}
-
-function buildCapture() {
-  const ctx = getAC();
-  const rate = ctx.sampleRate;
-  const len = Math.floor(rate * 0.35);
-  const buf = ctx.createBuffer(1, len, rate);
-  const data = buf.getChannelData(0);
-  for (let i = 0; i < len; i++) {
-    const t = i / rate;
-    const e1 = Math.exp(-t / 0.06) * 0.7;
-    const e2 = Math.exp(-t / 0.2) * 0.4;
-    data[i] = e1 * Math.sin(2*Math.PI*120*t)
-             + e2 * Math.sin(2*Math.PI*220*t)
-             + e1 * 0.3 * (Math.random()*2-1);
-  }
-  return buf;
-}
-
-function buildCheck() {
-  const ctx = getAC();
-  const rate = ctx.sampleRate;
-  const len = Math.floor(rate * 0.4);
-  const buf = ctx.createBuffer(1, len, rate);
-  const data = buf.getChannelData(0);
-  for (let i = 0; i < len; i++) {
-    const t = i / rate;
-    const env = Math.exp(-t/0.12)*0.5;
-    data[i] = env*(Math.sin(2*Math.PI*660*t)+0.4*Math.sin(2*Math.PI*880*t));
-  }
-  return buf;
-}
-
-function buildCheckmate() {
-  const ctx = getAC();
-  const rate = ctx.sampleRate;
-  const len = Math.floor(rate * 1.0);
-  const buf = ctx.createBuffer(1, len, rate);
-  const data = buf.getChannelData(0);
-  for (let i = 0; i < len; i++) {
-    const t = i / rate;
-    const env = Math.exp(-t/0.35)*0.7;
-    data[i] = env*(
-      Math.sin(2*Math.PI*150*t)+
-      0.5*Math.sin(2*Math.PI*120*t)+
-      0.3*Math.sin(2*Math.PI*80*t)
-    );
-  }
-  return buf;
-}
-
-function buildSelect() {
-  const ctx = getAC();
-  const rate = ctx.sampleRate;
-  const len = Math.floor(rate * 0.07);
-  const buf = ctx.createBuffer(1, len, rate);
-  const data = buf.getChannelData(0);
-  for (let i = 0; i < len; i++) {
-    const t = i / rate;
-    data[i] = Math.exp(-t/0.04)*0.25*Math.sin(2*Math.PI*500*t);
-  }
-  return buf;
-}
-
-function preloadAudio() {
-  try {
-    const ctx = getAC();
-    audioBuffers.move    = buildWoodHit(180, 0.18, 0.65);
-    audioBuffers.move2   = buildWoodHit(240, 0.14, 0.55);
-    audioBuffers.capture = buildCapture();
-    audioBuffers.check   = buildCheck();
-    audioBuffers.checkmate = buildCheckmate();
-    audioBuffers.select  = buildSelect();
-    audioBuffers.castle  = buildWoodHit(160, 0.22, 0.7);
-  } catch(e) {}
-}
-
-function playBuf(key) {
-  if (!S.sound) return;
-  try {
-    const ctx = getAC();
-    if (ctx.state === 'suspended') ctx.resume();
-    const buf = audioBuffers[key];
-    if (!buf) return;
-    const src = ctx.createBufferSource();
-    const gain = ctx.createGain();
-    src.buffer = buf;
-    src.connect(gain); gain.connect(ctx.destination);
-    gain.gain.value = 1.0;
-    src.start(ctx.currentTime);
-  } catch(e) {}
-}
-
-const SFX = {
-  move()     { playBuf(Math.random()>.5?'move':'move2'); },
-  capture()  { playBuf('capture'); },
-  check()    { playBuf('check'); },
-  checkmate(){ playBuf('checkmate'); },
-  castle()   { playBuf('castle'); },
-  select()   { playBuf('select'); },
-};
-
-function vibrate(ms) { if (S.haptic && navigator.vibrate) navigator.vibrate(ms); }
-
-/* ════════════════════════════════════════════
-   HOME SCREEN
-════════════════════════════════════════════ */
-function selMode(m) {
-  S.mode = m;
-  document.getElementById('modePvP').classList.toggle('sel', m==='pvp');
-  document.getElementById('modePvAI').classList.toggle('sel', m==='ai');
-  document.getElementById('diffCard').style.display = m==='ai' ? 'block' : 'none';
-}
-function selDiff(el, d) {
-  S.diff = d;
-  document.querySelectorAll('#diffCard .wood-btn').forEach(b=>b.classList.remove('sel'));
-  el.classList.add('sel');
-}
-function selTime(el, t) {
-  S.time = t;
-  document.querySelectorAll('#homeScreen .time-row .wood-btn').forEach(b=>b.classList.remove('sel'));
-  el.classList.add('sel');
-}
-
-/* ════════════════════════════════════════════
-   GAME INIT
-════════════════════════════════════════════ */
-function startGame() {
-  chess = new Chess();
-  flipped=false; selected=null; legalSqs=[];
-  gameOver=false; pendingPromo=null;
-  historyFens=[]; levelCount++;
-  wTime = S.time || 99999;
-  bTime = S.time || 99999;
-
-  document.getElementById('homeScreen').classList.remove('active');
-  document.getElementById('gameScreen').classList.add('active');
-  document.getElementById('endModal').classList.remove('show');
-
-  const diffLabel = S.diff.toUpperCase();
-  document.getElementById('hDiff').textContent = diffLabel;
-  document.getElementById('hLevel').textContent = 'LEVEL ' + levelCount;
-  document.getElementById('header-diff-display')?.remove();
-
-  if (S.mode === 'ai') {
-    document.getElementById('avatarEl').textContent = '♔';
-  } else {
-    document.getElementById('avatarEl').textContent = '♔';
-  }
-
-  // Preload audio on first gesture
-  preloadAudio();
-  stopClock(); startClock();
-  renderBoard(); updateUI();
-  saveLS();
-}
-
-function goHome() {
-  stopClock();
-  document.getElementById('endModal').classList.remove('show');
-  document.getElementById('settingsModal').classList.remove('show');
-  document.getElementById('gameScreen').classList.remove('active');
-  document.getElementById('homeScreen').classList.add('active');
-}
-function newGame() {
-  document.getElementById('endModal').classList.remove('show');
-  levelCount = Math.max(1, levelCount);
-  startGame();
-}
-
-/* ════════════════════════════════════════════
-   CLOCK
-════════════════════════════════════════════ */
-function startClock() {
-  stopClock();
-  if (!S.time) return;
-  clockOn = true;
-  clockInt = setInterval(() => {
-    if (!clockOn || gameOver) return;
-    if (chess.turn()==='w') { wTime=Math.max(0,wTime-1); if(wTime===0){endGame('b','timeout');return;} }
-    else { bTime=Math.max(0,bTime-1); if(bTime===0){endGame('w','timeout');return;} }
-    updateClocks();
-  }, 1000);
-}
-function stopClock() { clockOn=false; if(clockInt){clearInterval(clockInt);clockInt=null;} }
-function fmt(s) { if(s>=99999)return'∞'; return`${Math.floor(s/60)}:${(s%60).toString().padStart(2,'0')}`; }
-function updateClocks() {
-  const topIsBlack=!flipped;
-  document.getElementById('clockTop').textContent = fmt(topIsBlack?bTime:wTime);
-  document.getElementById('clockBot').textContent = fmt(topIsBlack?wTime:bTime);
-}
-
-/* ════════════════════════════════════════════
-   BOARD RENDER
-════════════════════════════════════════════ */
-function renderBoard() {
-  const el = document.getElementById('board');
-  const area = document.querySelector('.board-area');
-  const avail = Math.min(area.clientWidth, area.clientHeight) - 40;
-  const sz = Math.max(200, Math.min(380, avail));
-  el.style.width = sz+'px'; el.style.height = sz+'px';
-  el.innerHTML = '';
-
-  const board = chess.board();
-  const inCheck = chess.in_check();
-  const kingSq = inCheck ? findKingSq(chess.turn()) : null;
-  const lastMv = chess.history({verbose:true}).slice(-1)[0];
-
-  for (let r=0; r<8; r++) {
-    for (let c=0; c<8; c++) {
-      const dr = flipped ? 7-r : r;
-      const dc = flipped ? 7-c : c;
-      const piece = board[dr][dc];
-      const sqName = sqN(dr,dc);
-      const isLight = (dr+dc)%2===0;
-      const isLegal = legalSqs.includes(sqName);
-
-      const sq = document.createElement('div');
-      sq.className = 'sq '+(isLight?'l':'d');
-      sq.dataset.sq = sqName;
-
-      if (selected===sqName) sq.classList.add('sel-sq');
-      if (lastMv) {
-        if (lastMv.from===sqName) sq.classList.add('mv-from');
-        if (lastMv.to===sqName) sq.classList.add('mv-to');
-      }
-      if (kingSq===sqName) sq.classList.add('chk-sq');
-
-      if (S.hints && isLegal) {
-        const ind = document.createElement('div');
-        ind.className = piece ? 'leg-ring' : 'leg-dot';
-        sq.appendChild(ind);
-      }
-
-      if (piece) {
-        const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
-        svg.setAttribute('class','piece-svg');
-        svg.setAttribute('viewBox','0 0 45 45');
-        const use = document.createElementNS('http://www.w3.org/2000/svg','use');
-        use.setAttribute('href','#'+(piece.color)+piece.type.toUpperCase());
-        svg.appendChild(use); sq.appendChild(svg);
-      }
-
-      if (S.coords) {
-        if (dc===0) { const l=document.createElement('span'); l.className='sq-rank'; l.textContent=8-dr; sq.appendChild(l); }
-        if (dr===7) { const l=document.createElement('span'); l.className='sq-file'; l.textContent='abcdefgh'[dc]; sq.appendChild(l); }
-      }
-
-      sq.addEventListener('click', ()=>handleClick(sqName));
-      el.appendChild(sq);
+    function startGame(selectedMode) {
+        mode = selectedMode;
+        document.getElementById('game-mode-text').innerText = mode === 'ai' ? 'VS COMPUTER' : '2 PLAYERS';
+        document.getElementById('menu-screen').classList.remove('active-screen');
+        document.getElementById('game-screen').classList.add('active-screen');
+        resetGame();
     }
-  }
-}
 
-function sqN(r,c) { return 'abcdefgh'[c]+(8-r); }
-function findKingSq(color) {
-  const b=chess.board();
-  for(let r=0;r<8;r++) for(let c=0;c<8;c++)
-    if(b[r][c]&&b[r][c].type==='k'&&b[r][c].color===color) return sqN(r,c);
-  return null;
-}
-
-/* ════════════════════════════════════════════
-   CLICK
-════════════════════════════════════════════ */
-function handleClick(sq) {
-  if (gameOver||pendingPromo) return;
-  if (S.mode==='ai'&&chess.turn()==='b') return;
-  const piece = chess.get(sq);
-  if (selected) {
-    if (legalSqs.includes(sq)) { doMove(selected,sq); return; }
-    if (piece&&piece.color===chess.turn()) {
-      selected=sq; legalSqs=chess.moves({square:sq,verbose:true}).map(m=>m.to);
-      SFX.select(); vibrate(8); renderBoard(); return;
+    function backToMenu() {
+        document.getElementById('modal').style.display = 'none';
+        document.getElementById('game-screen').classList.remove('active-screen');
+        document.getElementById('menu-screen').classList.add('active-screen');
     }
-    selected=null; legalSqs=[]; renderBoard(); return;
-  }
-  if (piece&&piece.color===chess.turn()) {
-    selected=sq; legalSqs=chess.moves({square:sq,verbose:true}).map(m=>m.to);
-    SFX.select(); vibrate(8); renderBoard();
-  }
-}
 
-/* ════════════════════════════════════════════
-   MOVE
-════════════════════════════════════════════ */
-function doMove(from, to, promo) {
-  historyFens.push({fen:chess.fen(), wTime, bTime});
-  const piece = chess.get(from);
-  const isPromo = piece&&piece.type==='p'&&
-    ((piece.color==='w'&&to[1]==='8')||(piece.color==='b'&&to[1]==='1'));
+    function drawBoard() {
+        boardEl.innerHTML = '';
+        let validMoves = selectedSq ? game.moves({ square: selectedSq, verbose: true }).map(m => m.to) : [];
 
-  if (isPromo&&!promo) {
-    pendingPromo={from,to};
-    showPromoModal(piece.color); return;
-  }
+        for(let i=0; i<64; i++) {
+            let row = Math.floor(i/8);
+            let col = i%8;
+            let sqName = String.fromCharCode(97+col) + (8-row);
+            
+            let sq = document.createElement('div');
+            sq.className = `sq ${(row+col)%2 === 0 ? 'light' : 'dark'}`;
+            if(sqName === selectedSq) sq.classList.add('selected');
+            if(lastMoveSq && (sqName === lastMoveSq.from || sqName === lastMoveSq.to)) sq.classList.add('last-move');
 
-  const mv = chess.move({from,to,promotion:promo||'q'});
-  if (!mv) return;
-  selected=null; legalSqs=[];
-  vibrate(mv.captured?30:15);
-  if (mv.captured) SFX.capture();
-  else if (mv.flags.includes('k')||mv.flags.includes('q')) SFX.castle();
-  else SFX.move();
+            let piece = game.get(sqName);
+            if(piece) {
+                let pEl = document.createElement('div');
+                pEl.className = 'piece';
+                pEl.style.backgroundImage = `url(${piecesURL[piece.color + piece.type]})`;
+                sq.appendChild(pEl);
+            }
 
-  renderBoard(); updateUI(); checkEnd();
-  saveLS();
-  if (!gameOver&&S.mode==='ai'&&chess.turn()==='b') setTimeout(doAI,350);
-}
+            if(validMoves.includes(sqName)) {
+                let dot = document.createElement('div');
+                dot.className = 'legal-dot';
+                sq.appendChild(dot);
+            }
 
-function showPromoModal(color) {
-  const ps=['q','r','b','n'];
-  const ids=color==='w'?['wQ','wR','wB','wN']:['bQ','bR','bB','bN'];
-  const g=document.getElementById('promoGrid'); g.innerHTML='';
-  ps.forEach((p,i)=>{
-    const item=document.createElement('div'); item.className='promo-item';
-    const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
-    svg.setAttribute('viewBox','0 0 45 45');
-    const use=document.createElementNS('http://www.w3.org/2000/svg','use');
-    use.setAttribute('href','#'+ids[i]); svg.appendChild(use); item.appendChild(svg);
-    item.onclick=(function(piece){return function(){
-      const pd=pendingPromo; pendingPromo=null;
-      document.getElementById('promoModal').classList.remove('show');
-      doMove(pd.from,pd.to,piece);
-    };})(p);
-    g.appendChild(item);
-  });
-  document.getElementById('promoModal').classList.add('show');
-}
-
-/* ════════════════════════════════════════════
-   GAME END
-════════════════════════════════════════════ */
-function checkEnd() {
-  if (chess.in_checkmate()) {
-    const w=chess.turn()==='w'?'b':'w';
-    SFX.checkmate(); vibrate([100,50,200]);
-    endGame(w,'checkmate');
-  } else if (chess.in_stalemate()) {
-    endGame(null,'stalemate');
-  } else if (chess.in_draw()) {
-    endGame(null, chess.insufficient_material()?'insufficient':chess.in_threefold_repetition()?'repetition':'50move');
-  } else if (chess.in_check()) {
-    SFX.check(); vibrate([80,40]);
-    showToast('⚔ CHECK!');
-  }
-}
-function endGame(winner, reason) {
-  gameOver=true; clockOn=false; stopClock();
-  const icons={checkmate:'🏆',stalemate:'🤝',timeout:'⏰','50move':'🤝',repetition:'🤝',insufficient:'🤝',resign:'🏳'};
-  const msgs={
-    checkmate:(winner==='w'?'White':'Black')+' wins by Checkmate!',
-    stalemate:"Stalemate — Draw!",
-    timeout:(winner==='w'?'White':'Black')+' wins on time!',
-    '50move':'50-Move Rule — Draw!',
-    repetition:'Threefold Repetition — Draw!',
-    insufficient:'Insufficient Material — Draw!',
-    resign:(winner==='w'?'White':'Black')+' wins by Resignation!'
-  };
-  document.getElementById('endIcon').textContent=icons[reason]||'🏆';
-  document.getElementById('endTitle').textContent=winner?'GAME OVER':'DRAW';
-  document.getElementById('endMsg').textContent=msgs[reason]||'';
-  document.getElementById('endModal').classList.add('show');
-  try{localStorage.removeItem('chess3d');}catch(e){}
-}
-function resignGame(){if(!gameOver)endGame(chess.turn()==='w'?'b':'w','resign');}
-
-/* ════════════════════════════════════════════
-   AI  (Minimax + Alpha-Beta)
-════════════════════════════════════════════ */
-const PST={
-  p:[[0,0,0,0,0,0,0,0],[50,50,50,50,50,50,50,50],[10,10,20,30,30,20,10,10],[5,5,10,25,25,10,5,5],[0,0,0,20,20,0,0,0],[5,-5,-10,0,0,-10,-5,5],[5,10,10,-20,-20,10,10,5],[0,0,0,0,0,0,0,0]],
-  n:[[-50,-40,-30,-30,-30,-30,-40,-50],[-40,-20,0,0,0,0,-20,-40],[-30,0,10,15,15,10,0,-30],[-30,5,15,20,20,15,5,-30],[-30,0,15,20,20,15,0,-30],[-30,5,10,15,15,10,5,-30],[-40,-20,0,5,5,0,-20,-40],[-50,-40,-30,-30,-30,-30,-40,-50]],
-  b:[[-20,-10,-10,-10,-10,-10,-10,-20],[-10,0,0,0,0,0,0,-10],[-10,0,5,10,10,5,0,-10],[-10,5,5,10,10,5,5,-10],[-10,0,10,10,10,10,0,-10],[-10,10,10,10,10,10,10,-10],[-10,5,0,0,0,0,5,-10],[-20,-10,-10,-10,-10,-10,-10,-20]],
-  r:[[0,0,0,0,0,0,0,0],[5,10,10,10,10,10,10,5],[-5,0,0,0,0,0,0,-5],[-5,0,0,0,0,0,0,-5],[-5,0,0,0,0,0,0,-5],[-5,0,0,0,0,0,0,-5],[-5,0,0,0,0,0,0,-5],[0,0,0,5,5,0,0,0]],
-  q:[[-20,-10,-10,-5,-5,-10,-10,-20],[-10,0,0,0,0,0,0,-10],[-10,0,5,5,5,5,0,-10],[-5,0,5,5,5,5,0,-5],[0,0,5,5,5,5,0,-5],[-10,5,5,5,5,5,0,-10],[-10,0,5,0,0,0,0,-10],[-20,-10,-10,-5,-5,-10,-10,-20]],
-  k:[[-30,-40,-40,-50,-50,-40,-40,-30],[-30,-40,-40,-50,-50,-40,-40,-30],[-30,-40,-40,-50,-50,-40,-40,-30],[-30,-40,-40,-50,-50,-40,-40,-30],[-20,-30,-30,-40,-40,-30,-30,-20],[-10,-20,-20,-20,-20,-20,-20,-10],[20,20,0,0,0,0,20,20],[20,30,10,0,0,10,30,20]]
-};
-const PV={p:100,n:320,b:330,r:500,q:900,k:20000};
-
-function evalBoard() {
-  let s=0;
-  chess.board().forEach((row,r)=>row.forEach((p,c)=>{
-    if(!p)return;
-    const ri=p.color==='w'?r:7-r;
-    s+=p.color==='w'?(PV[p.type]+(PST[p.type]?PST[p.type][ri][c]:0))
-                    :-(PV[p.type]+(PST[p.type]?PST[p.type][ri][c]:0));
-  }));
-  return s;
-}
-function minimax(depth,alpha,beta,isMax) {
-  if(depth===0||chess.game_over()) return evalBoard();
-  const moves=chess.moves();
-  moves.sort((a,b)=>(b.includes('x')?1:0)-(a.includes('x')?1:0));
-  if(isMax){
-    let best=-Infinity;
-    for(const m of moves){chess.move(m);best=Math.max(best,minimax(depth-1,alpha,beta,false));chess.undo();alpha=Math.max(alpha,best);if(beta<=alpha)break;}
-    return best;
-  } else {
-    let best=Infinity;
-    for(const m of moves){chess.move(m);best=Math.min(best,minimax(depth-1,alpha,beta,true));chess.undo();beta=Math.min(beta,best);if(beta<=alpha)break;}
-    return best;
-  }
-}
-function doAI() {
-  document.getElementById('thinkFill').style.cssText='width:0;animation:none';
-  document.getElementById('thinkFill').getBoundingClientRect();
-  document.getElementById('thinkFill').style.cssText='width:100%;transition:width 2s linear';
-  setTimeout(()=>{
-    if(chess.game_over()||gameOver){document.getElementById('thinkFill').style.width='0';return;}
-    const moves=chess.moves({verbose:true}); if(!moves.length)return;
-    let best=null, bestS=Infinity;
-    const depth=S.diff==='hard'?3:S.diff==='medium'?2:1;
-    if(S.diff==='easy'){
-      const sc=moves.map(m=>{chess.move(m);const s=evalBoard();chess.undo();return{m,s};});
-      sc.sort((a,b)=>a.s-b.s);
-      const pool=sc.slice(0,Math.min(6,sc.length));
-      best=pool[Math.floor(Math.random()*pool.length)].m;
-    } else {
-      for(const m of moves){chess.move(m);const s=minimax(depth-1,-Infinity,Infinity,true);chess.undo();if(s<bestS){bestS=s;best=m;}}
+            sq.onclick = () => handleSquareClick(sqName);
+            boardEl.appendChild(sq);
+        }
+        checkGameOver();
     }
-    document.getElementById('thinkFill').style.cssText='width:0;transition:width .3s';
-    if(best){ selected=null; legalSqs=[]; doMove(best.from,best.to,'q'); }
-  },60);
-}
 
-/* ════════════════════════════════════════════
-   UI UPDATE
-════════════════════════════════════════════ */
-const PD ={p:'♟',n:'♞',b:'♝',r:'♜',q:'♛',k:'♚'};
-const PDW={p:'♙',n:'♘',b:'♗',r:'♖',q:'♕',k:'♔'};
-const PVA={p:1,n:3,b:3,r:5,q:9,k:0};
+    function handleSquareClick(sq) {
+        if(game.game_over()) return;
+        if(mode === 'ai' && game.turn() === 'b') return;
 
-function updateUI() {
-  const turn=chess.turn(); const topIsBlack=!flipped;
-  const hist=chess.history({verbose:true});
-  const captW=hist.filter(m=>m.color==='w'&&m.captured).map(m=>m.captured);
-  const captB=hist.filter(m=>m.color==='b'&&m.captured).map(m=>m.captured);
-  const mW=captW.reduce((s,p)=>s+PVA[p],0);
-  const mB=captB.reduce((s,p)=>s+PVA[p],0);
+        let piece = game.get(sq);
 
-  if(topIsBlack){
-    document.getElementById('capturedTop').textContent=captW.map(p=>PD[p]).join('');
-    document.getElementById('advTop').textContent=mW>mB?`+${mW-mB}`:'';
-  } else {
-    document.getElementById('capturedTop').textContent=captB.map(p=>PDW[p]).join('');
-    document.getElementById('advTop').textContent=mB>mW?`+${mB-mW}`:'';
-  }
+        if(selectedSq) {
+            let move = game.move({ from: selectedSq, to: sq, promotion: 'q' });
+            if(move) {
+                lastMoveSq = move;
+                selectedSq = null;
+                playSound('move');
+                drawBoard();
+                if(mode === 'ai') setTimeout(makeAIMove, 400);
+            } else {
+                selectedSq = (piece && piece.color === game.turn()) ? sq : null;
+                drawBoard();
+            }
+        } else {
+            if(piece && piece.color === game.turn()) {
+                selectedSq = sq;
+                drawBoard();
+            }
+        }
+    }
 
-  const histEl=document.getElementById('histEl'); histEl.innerHTML='';
-  chess.history().forEach((m,i)=>{
-    const pill=document.createElement('div');
-    const isW=i%2===0;
-    pill.className='move-pill'+(isW?' w':'')+(i===chess.history().length-1?' latest':'');
-    pill.textContent=(isW?Math.floor(i/2)+1+'. ':'')+m;
-    histEl.appendChild(pill);
-  });
-  histEl.scrollLeft=histEl.scrollWidth;
-  updateClocks();
-}
+    function makeAIMove() {
+        if(game.game_over()) return;
+        let moves = game.moves({ verbose: true });
+        if(moves.length === 0) return;
+        
+        // Simple AI: Prioritize captures, else random
+        let bestMove = moves.find(m => m.captured);
+        if(!bestMove) bestMove = moves[Math.floor(Math.random() * moves.length)];
+        
+        let move = game.move(bestMove);
+        lastMoveSq = move;
+        playSound(move.captured ? 'capture' : 'move');
+        drawBoard();
+    }
 
-/* ════════════════════════════════════════════
-   HINT
-════════════════════════════════════════════ */
-function showHint() {
-  const moves=chess.moves({verbose:true});
-  if(!moves.length)return;
-  // Pick best move at depth 1
-  let best=null,bestS=chess.turn()==='w'?-Infinity:Infinity;
-  for(const m of moves){
-    chess.move(m);const s=evalBoard();chess.undo();
-    if(chess.turn()==='w'?s>bestS:s<bestS){bestS=s;best=m;}
-  }
-  if(best){showToast('💡 Try: '+best.from+' → '+best.to,'gold');}
-}
+    function resetGame() {
+        game.reset();
+        selectedSq = null;
+        lastMoveSq = null;
+        document.getElementById('modal').style.display = 'none';
+        drawBoard();
+    }
 
-/* ════════════════════════════════════════════
-   CONTROLS
-════════════════════════════════════════════ */
-function flipBoard(){flipped=!flipped;renderBoard();updateUI();}
-function undoMove(){
-  if(!historyFens.length)return;
-  const steps=(S.mode==='ai'&&historyFens.length>=2)?2:1;
-  for(let i=0;i<steps;i++){
-    if(!historyFens.length)break;
-    const h=historyFens.pop();
-    chess.load(h.fen); wTime=h.wTime; bTime=h.bTime;
-  }
-  gameOver=false;selected=null;legalSqs=[];
-  renderBoard();updateUI();saveLS();
-}
+    function undoMove() {
+        game.undo();
+        if(mode === 'ai') game.undo();
+        lastMoveSq = null;
+        selectedSq = null;
+        drawBoard();
+    }
 
-/* ════════════════════════════════════════════
-   SETTINGS
-════════════════════════════════════════════ */
-function openSettings(){document.getElementById('settingsModal').classList.add('show');}
-function closeSettings(){document.getElementById('settingsModal').classList.remove('show');renderBoard();}
-function togSett(k){
-  S[k]=!S[k];
-  const id='tog'+k.charAt(0).toUpperCase()+k.slice(1);
-  document.getElementById(id).classList.toggle('on',S[k]);
-}
+    function hintMove() {
+        if(game.game_over() || (mode==='ai' && game.turn()==='b')) return;
+        let moves = game.moves({ verbose: true });
+        if(moves.length > 0) {
+            let randMove = moves[Math.floor(Math.random() * moves.length)];
+            selectedSq = randMove.from;
+            drawBoard();
+        }
+    }
 
-/* ════════════════════════════════════════════
-   TOAST
-════════════════════════════════════════════ */
-let tT=null;
-function showToast(msg,cls=''){
-  const el=document.getElementById('toast');
-  el.textContent=msg; el.className=cls; el.classList.add('show');
-  if(tT)clearTimeout(tT);
-  tT=setTimeout(()=>el.classList.remove('show'),2500);
-}
+    function checkGameOver() {
+        if(game.game_over()) {
+            let desc = "Game Over";
+            if(game.in_checkmate()) desc = "CHECKMATE! " + (game.turn() === 'w' ? "Black Wins" : "White Wins");
+            else if(game.in_draw()) desc = "It's a DRAW!";
+            else if(game.in_stalemate()) desc = "STALEMATE!";
+            
+            document.getElementById('modal-desc').innerText = desc;
+            setTimeout(() => document.getElementById('modal').style.display = 'flex', 500);
+        }
+    }
 
-/* ════════════════════════════════════════════
-   LOCAL STORAGE
-════════════════════════════════════════════ */
-function saveLS(){
-  try{localStorage.setItem('chess3d',JSON.stringify({
-    pgn:chess.pgn(),wTime,bTime,flipped,S,levelCount,
-    fens:historyFens.map(h=>({fen:h.fen,wTime:h.wTime,bTime:h.bTime}))
-  }));}catch(e){}
-}
-function loadLS(){
-  try{
-    const d=localStorage.getItem('chess3d');if(!d)return false;
-    const sv=JSON.parse(d);
-    Object.assign(S,sv.S||{});
-    chess=new Chess();
-    if(sv.pgn)chess.load_pgn(sv.pgn);
-    wTime=sv.wTime||S.time||99999;
-    bTime=sv.bTime||S.time||99999;
-    flipped=sv.flipped||false;
-    levelCount=sv.levelCount||1;
-    historyFens=(sv.fens||[]);
-    return true;
-  }catch(e){return false;}
-}
-
-/* ════════════════════════════════════════════
-   INIT
-════════════════════════════════════════════ */
-window.addEventListener('resize',()=>{
-  if(document.getElementById('gameScreen').classList.contains('active'))renderBoard();
-});
-
-document.addEventListener('touchstart',()=>{
-  try{getAC().resume();preloadAudio();}catch(e){}
-},{once:true});
-document.addEventListener('click',()=>{
-  try{getAC().resume();if(!audioBuffers.move)preloadAudio();}catch(e){}
-},{once:true});
-
-window.addEventListener('load',()=>{
-  ['sound','haptic','hints','coords'].forEach(k=>{
-    const id='tog'+k.charAt(0).toUpperCase()+k.slice(1);
-    document.getElementById(id)?.classList.toggle('on',S[k]);
-  });
-  if(loadLS()){
-    document.getElementById('homeScreen').classList.remove('active');
-    document.getElementById('gameScreen').classList.add('active');
-    document.getElementById('hDiff').textContent=S.diff.toUpperCase();
-    document.getElementById('hLevel').textContent='LEVEL '+levelCount;
-    preloadAudio();
-    startClock();renderBoard();updateUI();
-  }
-});
+    // Basic Sound Synthesis (No external files needed, works immediately)
+    function playSound(type) {
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gainNode = ctx.createGain();
+            osc.connect(gainNode);
+            gainNode.connect(ctx.destination);
+            
+            if(type === 'move') {
+                osc.frequency.setValueAtTime(300, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.1);
+                gainNode.gain.setValueAtTime(0.5, ctx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+            } else if (type === 'capture') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(150, ctx.currentTime);
+                gainNode.gain.setValueAtTime(0.8, ctx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+            }
+            osc.start();
+            osc.stop(ctx.currentTime + 0.2);
+        } catch(e) {}
+    }
 </script>
 </body>
 </html>
